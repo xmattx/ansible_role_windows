@@ -1,5 +1,5 @@
 # ansible_role_windows
-###py script to create ansible roles
+### py script to create ansible roles
 
 Just pass role name as an argument. Ex:
 
