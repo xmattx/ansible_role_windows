@@ -101,9 +101,6 @@ class ansibleRole():
         for command in commands:
             psCommand = self.encodeCommand(command)
             subprocess.run(psCommand)
-
-        # with open(f"{ roleName }/roles/{ roleName }/meta/main.yml", "w") as meta:    
-        #     meta.write(META)
             
         self.jtemp(roleName)
 
