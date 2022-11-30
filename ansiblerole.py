@@ -14,6 +14,27 @@ META = '''galaxy_info:
   min_ansible_version: "2.1"
 '''
 
+CI = '''image: public.ecr.aws/ubuntu/ubuntu:20.04_stable
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+stages:
+  - validate
+
+ansible validate:
+  stage: validate
+  script:
+    - apt-get update
+    - apt-get -y install gnupg2
+    - DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata
+    - apt-get -y install software-properties-common
+    - DEBIAN_FRONTEND=noninteractive apt install -y sudo git python3-pip
+    - pip3 install "ansible-lint"
+    - ansible-galaxy collection install community.windows
+    - ansible-lint --force-color -p roles/{{ role_name }}
+'''
+
 # ACTUAL CLASS
 class ansibleRole():
 
@@ -26,10 +47,16 @@ class ansibleRole():
     def jtemp(self, roleName):
         
         path_meta = f"{ roleName }/roles/{roleName}/meta/main.yml"
+        path_ci = f"{ roleName }/.gitlab-ci.yml"
+
         tem_meta = Template(META).render(role_name=roleName)
+        tem_ci = Template(CI).render(role_name=roleName)
 
         with open(path_meta, "w") as f:
             f.write(tem_meta)
+        
+        with open(path_ci, "w") as f:
+            f.write(tem_ci)
 
 
     # CMD ENCODER FUNCTION
