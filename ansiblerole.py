@@ -12,6 +12,7 @@ META = '''galaxy_info:
         - all
   license: "GPT-2.0"
   min_ansible_version: "2.1"
+
 '''
 
 CI = '''image: public.ecr.aws/ubuntu/ubuntu:20.04_stable
@@ -33,13 +34,21 @@ ansible validate:
     - pip3 install "ansible-lint"
     - ansible-galaxy collection install community.windows
     - ansible-lint --force-color -p roles/{{ role_name }}
+
+'''
+
+PLAYBOOK = '''---
+- hosts: all
+  roles:
+    - roles/{{ role_name }}
+
 '''
 
 # ACTUAL CLASS
 class ansibleRole():
 
     # INIT
-    def __init__(self, roleName=None, command=None, script_dir=None):
+    def __init__(self, roleName=None, command=None):
         self.roleName = roleName
         self.command = command
 
@@ -48,9 +57,11 @@ class ansibleRole():
         
         path_meta = f"{ roleName }/roles/{roleName}/meta/main.yml"
         path_ci = f"{ roleName }/.gitlab-ci.yml"
+        path_pb = f"{ roleName }/playbook.yml"
 
         tem_meta = Template(META).render(role_name=roleName)
         tem_ci = Template(CI).render(role_name=roleName)
+        tem_pb = Template(PLAYBOOK).render(role_name=roleName)
 
         with open(path_meta, "w") as f:
             f.write(tem_meta)
@@ -58,6 +69,8 @@ class ansibleRole():
         with open(path_ci, "w") as f:
             f.write(tem_ci)
 
+        with open(path_pb, "w") as f:
+            f.write(tem_pb)
 
     # CMD ENCODER FUNCTION
     def encodeCommand(self, command):
@@ -74,29 +87,26 @@ class ansibleRole():
 
             return toExecute
 
-
     # ROLE STRUCTURE CREATION
     def createRoleStructure(self, roleName):
-        commands = [f"New-Item -ItemType Directory -Name { roleName }/collections",
-                    f"New-Item -Name { roleName }/collections/requirements.yml -Value '---' ",
-                    f"New-Item -ItemType Directory -Name { roleName }/roles/{ roleName }",
-                    f"New-Item -ItemType Directory -Name { roleName }/roles/{ roleName }/defaults",
-                    f"New-Item -name { roleName }/roles/{ roleName }/defaults/main.yml -Value '---' ",
-                    f"New-Item -ItemType Directory -Name { roleName }/roles/{ roleName }/files",
-                    f"New-Item -ItemType Directory -Name { roleName }/roles/{ roleName }/handlers",
-                    f"New-Item -Name { roleName }/roles/{ roleName }/handlers/main.yml -Value '---' ",
-                    f"New-Item -ItemType Directory -Name { roleName }/roles/{ roleName }/meta",
-                    f"New-Item -Name { roleName }/roles/{ roleName }/meta/main.yml -Value '---' ",
-                    f"New-Item -ItemType Directory -Name { roleName }/roles/{ roleName }/tasks",
-                    f"New-Item -Name { roleName }/roles/{ roleName }/tasks/main.yml -Value '---' ",
-                    f"New-Item -ItemType Directory -Name { roleName }/roles/{ roleName }/templates",
-                    f"New-Item -ItemType Directory -Name { roleName }/roles/{ roleName }/vars",
-                    f"New-Item -Name { roleName }/roles/{ roleName }/vars/main.yml -Value '---' ",
-                    f"New-Item -Name { roleName }/playbook.yml -Value '---' ",
-                    f"New-Item -Name { roleName }/inventory.ini -Value '---' ",
-                    f"new-item -Name { roleName }/README.md -Value '# { roleName }'"]
-        
-
+        commands = [f'New-Item -ItemType Directory -Name { roleName }/collections',
+                    f'New-Item -Name { roleName }/collections/requirements.yml -Value "---`ncollections:`n  - community.windows`n  - community.general`n" ',
+                    f'New-Item -ItemType Directory -Name { roleName }/roles/{ roleName }',
+                    f'New-Item -ItemType Directory -Name { roleName }/roles/{ roleName }/defaults',
+                    f'New-Item -name { roleName }/roles/{ roleName }/defaults/main.yml -Value "---`n" ',
+                    f'New-Item -ItemType Directory -Name { roleName }/roles/{ roleName }/files',
+                    f'New-Item -ItemType Directory -Name { roleName }/roles/{ roleName }/handlers',
+                    f'New-Item -Name { roleName }/roles/{ roleName }/handlers/main.yml -Value "---`n" ',
+                    f'New-Item -ItemType Directory -Name { roleName }/roles/{ roleName }/meta',
+                    f'New-Item -Name { roleName }/roles/{ roleName }/meta/main.yml -Value "---`n" ',
+                    f'New-Item -ItemType Directory -Name { roleName }/roles/{ roleName }/tasks',
+                    f'New-Item -Name { roleName }/roles/{ roleName }/tasks/main.yml -Value "---`n" ',
+                    f'New-Item -ItemType Directory -Name { roleName }/roles/{ roleName }/templates',
+                    f'New-Item -ItemType Directory -Name { roleName }/roles/{ roleName }/vars',
+                    f'New-Item -Name { roleName }/roles/{ roleName }/vars/main.yml -Value "---`n" ',
+                    f'New-Item -Name { roleName }/playbook.yml',
+                    f'New-Item -Name { roleName }/inventory.ini -Value "---`n" ',
+                    f'new-item -Name { roleName }/README.md -Value "# { roleName }"']
 
         for command in commands:
             psCommand = self.encodeCommand(command)
